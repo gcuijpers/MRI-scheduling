@@ -2,7 +2,7 @@ library(readr)
 library(moments)
 
 ## importing data 
-df <- read_csv("Desktop/computational research skills/MRI-scheduling/ScanRecords.csv")
+df <- read_csv("~/Desktop/computational research skills/MRI-scheduling/ScanRecords.csv")
 
 ## splitting type 1 and type 2 patiens 
 df_type1 <- df[df$PatientType == 'Type 1',]
@@ -13,6 +13,8 @@ df_type2 <- df[df$PatientType == 'Type 2',]
 Dur1_mean <- mean(df_type1$Duration)
 Dur1_sd <- sd(df_type1$Duration)
 h1 <- hist(df_type1$Duration)
+bootstrap(df=df_type1$Duration, mean=Dur1_mean, sd=Dur1_sd)
+
 
 ## Distribution of duration of Type 2 is unknown
 ## Try normal distribution 
@@ -24,3 +26,5 @@ ks.test(df_type1$Duration, "pnorm")
 ks.test(df_type1$Duration, df_type2$Duration)
 
 
+
+  
