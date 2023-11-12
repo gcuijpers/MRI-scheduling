@@ -12,7 +12,7 @@ df_type2 <- df[df$PatientType == 'Type 2',]
 ## Mean and sd can easily be calculated the following 
 Dur1_mean <- mean(df_type1$Duration)
 Dur1_sd <- sd(df_type1$Duration)
-h1 <- hist(df_type1$Duration)
+h1 <- hist(df_type2$Duration)
 bootstrap(df=df_type1$Duration, mean=Dur1_mean, sd=Dur1_sd)
 
 
