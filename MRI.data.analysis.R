@@ -18,13 +18,13 @@ bootstrap(df=df_type1$Duration, mean=Dur1_mean, sd=Dur1_sd)
 
 ## Distribution of duration of Type 2 is unknown
 ## Try normal distribution 
-h2 <- hist(df_type2$Duration)
+h2 <- hist(df_type2$Time)
 skewness_dur2 <- skewness(df_type2$Duration)
 kurtosis_dur2 <- kurtosis(df_type2$Duration)
 jarque.test(df_type2$Duration)
 ks.test(df_type1$Duration, "pnorm")
 ks.test(df_type1$Duration, df_type2$Duration)
 
-
+print
 
   
