@@ -37,9 +37,8 @@ print(p.val)
 print(cv) 
 absolute <- abs(Q.star)
 
-2*pt(q= 2.146882, df = B, lower.tail = FALSE )
 
-lower <- X.bar-(-1.88094*St.Dev/sqrt(n))
-upper <- X.bar-(1.824193*St.Dev/sqrt(n))
-print(upper)
-print(lower)
+upperbound <- X.bar-(-1.999360*St.Dev/sqrt(n)) ## critical values are calculated above at cv
+lowerbound <- X.bar-(1.862736*St.Dev/sqrt(n))
+print(upperbound)
+print(lowerbound)

@@ -13,7 +13,9 @@ df_type2 <- df[df$PatientType == 'Type 2',]
 Dur1_mean <- mean(df_type1$Duration)
 Dur1_sd <- sd(df_type1$Duration)
 h1 <- hist(df_type2$Duration)
-bootstrap(df=df_type1$Duration, mean=Dur1_mean, sd=Dur1_sd)
+##two sided confidence interval for Type 1 duration with a=5% is [0.4233055, 0.4427022]  C ∗(X ) =[ X n − c∗ α/2,B Sn/√n, X n − c∗ 1−α/2,B Sn/√n]
+
+
 
 
 ## Distribution of duration of Type 2 is unknown
