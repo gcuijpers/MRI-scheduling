@@ -42,6 +42,8 @@ jarque.test(df_type2$Duration)
 ks.test(df_type1$Duration, "pnorm")
 ks.test(df_type1$Duration, df_type2$Duration)
 
+##use 
+
 -----------------------------------------------------------------------------------------------------------------------------------------------------
 ## Distribution of number of Type 2 patients every day is also unknown. 
 ## First maybe try poisson (since Type 1 is also poisson)

@@ -20,12 +20,14 @@ St.Dev <- sd(X)                                         # Standard deviation of 
 Q.n <- sqrt(n)*X.bar/St.Dev                            # Test statistic
 
 # We use the bootstrap to find the critical value
-Q.star <- rep(NA, times = B)                            # Initialise vector for bootstrap statistics
+Q.star <- rep(NA, times = B)     # Initialise vector for bootstrap statistics
+X.bar.star.mean <- rep(NA, times = B)
 for (b in 1:B) {
     #J <- sample.int(n, size = n, replace = TRUE)        # Draw the indices J
-   # X.star <- X[J]                                     # Draw the bootstrap sample
+   # X.star <- X[J].  # Draw the bootstrap sample
      X.star <- rnorm(n, mean = X.bar, sd = St.Dev)
-    X.bar.star <- mean(X.star)                          #Bootstrap sample mean
+    X.bar.star <- mean(X.star)  #Bootstrap sample mean
+    X.bar.star.mean[b] <- X.bar.star
     St.Dev.star <- sd(X.star)                           # Bootstrap standard deviation
     Q.star[b] <- sqrt(n)*(X.bar.star-X.bar)/St.Dev.star # Bootstrap statistic
     
@@ -36,7 +38,7 @@ p.val <- mean(absolute > Q.n)                             # Calculate the bootst
 print(p.val)
 print(cv) 
 absolute <- abs(Q.star)
-
+hist(X.bar.star.mean)
 
 upperbound <- X.bar-(-1.999360*St.Dev/sqrt(n)) ## critical values are calculated above at cv
 lowerbound <- X.bar-(1.862736*St.Dev/sqrt(n))
