@@ -57,7 +57,7 @@ print(X)
 k=1000
 simsamples <- replicate(k, X[sample.int(n, size = n, replace = TRUE)])
 print(simsamples)
-Q1 <- function(x){quantile(x,0.5)}
+Q1 <- function(x){quantile(x,0.25)}
 Q3 <- function(x){quantile(x, 0.75)}
 simmean <- apply(simsamples, 2, mean)
 simQ1 <- apply(simsamples,2, Q1)
@@ -65,7 +65,11 @@ simQ3 <- apply(simsamples, 2, Q3)
 print(mean(simQ1))
 quantile(simmean, c(0.025, 0.975))
 quantile(simQ3, c(0.025, 0.975))
-print(simQ1)
+print(mean(simQ1))
+
+
+
+
 
 samp <- rgamma(10000, shape = 12.58373, rate = 18.80033)
 hist(samp)

@@ -3,8 +3,8 @@ library(MASS)
 library(survival)
 library(fitdistrplus)
 library(logspline)
-library(car)
 library(carData)
+library(car)
 
 
 
@@ -61,10 +61,10 @@ hist(df_type2$Duration)
 
 
 ## some code to test the fit of distribution 
-print(descdist(df_type2$Duration, discrete = FALSE,boot = 500))
+print(descdist(df_type2$Duration, discrete = FALSE,boot = 500)) ## graph for skewness, kurtiosis
 fit.gamma <- fitdist(df_type2$Duration, "gamma")
 fit.norm <- fitdist(df_type2$Duration, "norm")
-fit.lnorm <- fitdist(df_type2$Duration, "chi-squared")
+fit.lnorm <- fitdist(df_type2$Duration, "c")
 
 print(mean(df_type2$Duration))
 print(summary(fit.gamma))
