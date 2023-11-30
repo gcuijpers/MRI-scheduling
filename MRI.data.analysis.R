@@ -50,7 +50,7 @@ scale = 0.1862451^2/0.6702939
 
 ##Chi-square uitproberen!!!
 
------------------------------------------------------------------------------------------------------------------------------------------------------
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
 ## Distribution of number of Type 2 patients every day is also unknown. 
 ## First maybe try poisson (since Type 1 is also poisson)
 
@@ -60,6 +60,8 @@ Frequencies_Type2 <- data.frame(Date=format(as.Date(names(tab2)), '%Y-%m-%d'), f
 Frequencies_Type2 <- Frequencies_Type2[Frequencies_Type2$frequency != 0,] ## delete weekends.
 F2_mean <- mean(Frequencies_Type2$frequency)
 F2_sd <- sd(Frequencies_Type2$frequency)
+
+
 
 ## Since the variance (1.5217) is a lot lower than the mean (10.39) it is probably not poisson distributed
 hist(Frequencies_Type2$frequency)
