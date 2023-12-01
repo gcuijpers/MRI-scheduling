@@ -10,11 +10,11 @@ scan_mean_1 = 0.432
 scan_sd_1 = 0.0974
 
 lam_2 = 10.3913
-scan_mean_2 = 0.669
-scan_sd_2 = 0.187
+scan_shape = 12.583
+scan_scale = 1/18.800
 
-n_slot_1 = 17
-n_slot_2 = 11
+n_slot_1 = 18
+n_slot_2 = 12
 
 days = 1000
 
@@ -45,7 +45,7 @@ def gen_two(lam, mean, sd):
         if arr_time > 17:
             day += 1 
             arr_time -= 9    
-        scan_dur = np.random.normal(mean,sd)
+        scan_dur = np.random.gamma(mean,sd)
         time = arr_time
         patients.append([day,time,scan_dur])
     patients = np.array(patients)
@@ -90,7 +90,7 @@ def perf_eval(schedule, patients):
 
 
 pat_1 = gen_one(lam_1, scan_mean_1, scan_sd_1)
-pat_2 = gen_two(lam_2, scan_mean_2, scan_sd_2)
+pat_2 = gen_two(lam_2, scan_shape, scan_scale)
 
 sch_1 = schedule(pat_1, n_slot_1)
 sch_2 = schedule(pat_2, n_slot_2)
@@ -101,18 +101,28 @@ days_wait_type2 = [int(sch_day - call_day) for sch_day, call_day in zip(sch_2[:,
 lateness_t1, overtime_t1, idletime_t1 = perf_eval(sch_1, pat_1)
 lateness_t2, overtime_t2, idletime_t2 = perf_eval(sch_2, pat_2)
 
+
+
 print("TYPE 1")
 print("Average lateness:", round(np.average(lateness_t1)*60,2), "minutes")
+print("lateness 25th quantile:", round(np.quantile(lateness_t1, 0.25)*60,2), "minutes")
+print("lateness 50th quantile:", round(np.quantile(lateness_t1, 0.5)*60,2), "minutes")
+print("lateness 75th quantile:", round(np.quantile(lateness_t1, 0.75)*60,2), "minutes")
 print("Maximum lateness:", round(np.max(lateness_t1)*60,2), "minutes")
 print("Average days wait:", round(np.average(days_wait_type1),2), "days")
+print("Maximum days wait:", round(np.max(days_wait_type1),2), "days")
 print("Average overtime:", round(np.average(overtime_t1)*60,2), "minutes")
 print("Average idle time:", round(np.average(idletime_t1),2), "h/day \n") # except last day
 
 
 print("TYPE 2")
 print("Average lateness:", round(np.average(lateness_t2)*60,2), "minutes")
+print("lateness 25th quantile:", round(np.quantile(lateness_t2, 0.25)*60,2), "minutes")
+print("lateness 50th quantile:", round(np.quantile(lateness_t2, 0.5)*60,2), "minutes")
+print("lateness 75th quantile:", round(np.quantile(lateness_t2, 0.75)*60,2), "minutes")
 print("Maximum lateness:", round(np.max(lateness_t2)*60,2), "minutes")
 print("Average days wait:", round(np.average(days_wait_type2),2), "days")
+print("Maximum days wait:", round(np.max(days_wait_type2),2), "days")
 print("Average overtime:", round(np.average(overtime_t2)*60,2), "minutes")
 print("Average idle time:", round(np.average(idletime_t2),2), "h/day") # except last day
 
