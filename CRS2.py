@@ -4,25 +4,26 @@ Created on Thu Nov  2 14:33:52 2023
 """
 
 import numpy as np
-from queue import PriorityQueue
 
-lam_1 = 15
-scan_mean_1 = 0.6
-scan_sd_1 = 0.2
+lam_1 = 16.47826
+scan_mean_1 = 0.432
+scan_sd_1 = 0.0974
 
-lam_2 = 9
-scan_mean_2 = 0.5
-scan_sd_2 = 0.1
+lam_2 = 10.3913
+scan_mean_2 = 0.669
+scan_sd_2 = 0.187
 
-n_slot_1 = 12
-n_slot_2 = 10
+slotlength_1 = 9/17
+slotlength_2 = 9/11
+
+n_days = 3
 
 def gen_one(lam, mean, sd):
     day = 0 
     time = 8
     patients = []
     
-    while day < 2:
+    while day < n_days:
         arr_time = time + 9*np.random.exponential(1/lam)
         if arr_time > 17:
             day += 1 
@@ -39,7 +40,7 @@ def gen_two(lam, mean, sd):
     time = 8
     patients = []
     
-    while day < 2:
+    while day < n_days:
         arr_time = time + 9*np.random.exponential(1/lam)
         if arr_time > 17:
             day += 1 
@@ -51,52 +52,91 @@ def gen_two(lam, mean, sd):
     patients = patients[:-1]
     return patients   
 
-def merge(pat_1, pat_2):
-    patients = []
-    n_two = pat_2.shape[0]
-    j = 0
-    for i in range(pat_1.shape[0]):
-        while pat_2[j][0] <= pat_1[i][0] and pat_2[j][1] <= pat_1[i][1] and j < n_two-1:
-            patients.append(pat_2[j])
-            j += 1
-        patients.append(pat_1[i])
-    while j < n_two:
-        patients.append(pat_2[j])
-        j += 1
-    patients = np.array(patients)
-    return patients
-'''
-def merge(pat_1, pat_2):
-    patients = []
-    n_one = pat_1.shape[0]
-    n_two = pat_2.shape[0]
-    i = 0
-    j = 0
-    for k in range(n_one + n_two):
-        if pat_1[i][0] <= pat_2[j][0] and pat_1[i][1] <= pat_2[j][1]:
-            patients.append(pat_1[i])
-            i += 1
-            if i == n_one:
-                while j < n_two:
-                    patients.append(pat_2[j])
-                    j += 1
-                break
+def merge(pat_1, pat_2): #merge and sort by incoming call time
+    stacked_patients = np.vstack((pat_1, pat_2))
+    sorted_indices = np.lexsort((stacked_patients[:, 1], stacked_patients[:, 0]))
+    return stacked_patients[sorted_indices]
+    
+def schedule(patients, slotlengths):
+    schedule_1 = []
+    schedule_2 = []
+    sch_days = [1,1]
+    schedule_1.append([1,8,0])
+    schedule_2.append([1,8,1])
+    sch_time_1 = 8 + slotlengths[int(patients[0][3]-1)]
+    sch_time_2 = 8 + slotlengths[int(patients[1][3]-1)]
+    
+
+    for i in range(2,len(patients)): #day, time, patient's index
+    
+        #only shift if neither type can be scheduled anymore or patients call on same day
+        if sch_time_1 + min(slotlengths) > 17 or patients[i][0] == sch_days[0]:
+            sch_days[0] += 1
+            sch_time_1 = 8
+        if sch_time_2 + min(slotlengths) > 17 or patients[i][0] == sch_days[1]:
+            sch_days[1] += 1
+            sch_time_2 = 8
+            
+        if sch_time_1 + slotlengths[int(patients[i][3] -1)] > 17 and sch_time_2 + slotlengths[int(patients[i][3] -1)] > 17:
+            sch_days[1] += 1 
+            sch_time_2 = 8
+    
+        if (schedule_1[-1][0], schedule_1[-1][1]) <= (schedule_2[-1][0], schedule_2[-1][1]) and sch_time_1 + slotlengths[int(patients[i][3] -1)] <= 17:
+            schedule_1.append([sch_days[0], round(sch_time_1,2), i])
+            sch_time_1 += slotlengths[int(patients[i][3] -1)]
         else:
-            patients.append(pat_2[j])
-            j += 1
-            if j == n_two:
-                while i < n_one:
-                    patients.append(pat_1[i])
-                    i += 1
-                break
-    patients = np.array(patients)
-    return patients
-'''
+            schedule_2.append([sch_days[1], round(sch_time_2,2), i])
+            sch_time_2 += slotlengths[int(patients[i][3] -1)]
+            
+    return schedule_1, schedule_2
+
+def performance_eval(schedule, patients):
+    lateness = [] # hours scan starts later than scheduled
+    days_wait = [] # n. days in future patients are scheduled upon calling
+    overtime = [] # hours of overtime for each day (after 17:00)
+    idle_time = [] # machine idle time between 8-17 per day (except last day)
+    idle_time_curr = 0
+    
+    curr_time = 8
+    
+    for slot in schedule:
+        if slot[1] == 8 and slot[0] > 1: # first patient always scheduled at 8
+            overtime.append(max(0, curr_time - 17))
+            idle_time_curr += max(0, 17 - curr_time)
+            idle_time.append(idle_time_curr)
+            idle_time_curr = 0
+            
+            curr_time = 8
+            
+        pat = patients[slot[2]]
+        lateness.append(max(0, curr_time - slot[1]))
+        idle_time_curr += max(0, slot[1] - curr_time) #starting time - prev. finish
+        days_wait.append(int(slot[0] - pat[0]))
+        
+        curr_time = max(curr_time, slot[1]) + pat[2]
+        
+    return lateness, days_wait, overtime, idle_time
+
 pat_1 = gen_one(lam_1, scan_mean_1, scan_sd_1)
 pat_2 = gen_two(lam_2, scan_mean_2, scan_sd_2)
 patients = merge(pat_1, pat_2)
-print(patients)
+schedules = schedule(patients, [slotlength_1, slotlength_2])
 
+lateness_m1, days_wait_m1, overtime_m1, idle_time_m1 = performance_eval(schedules[0], patients)
+lateness_m2, days_wait_m2, overtime_m2, idle_time_m2 = performance_eval(schedules[1], patients)
+
+lateness = lateness_m1 + lateness_m2
+days_wait = days_wait_m1 + days_wait_m2
+overtime = [max(m1, m2) for m1, m2 in zip(overtime_m1, overtime_m2)] # entire team stays if overtime on 1 machine?
+idle_time = [m1 + m2 for m1, m2 in zip(idle_time_m1, idle_time_m2)]
+
+
+#print(lateness,"\n")
+print("Average lateness:", np.average(lateness))
+print("Maximum lateness:", np.max(lateness),"\n")
+print("Average days wait:", np.average(days_wait),"\n")
+print("Average overtime:", np.average(overtime),"\n")
+print("Average idle time (fractional):", np.average(idle_time)/18,"\n")
 
 
 
