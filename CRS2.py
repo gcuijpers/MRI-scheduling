@@ -5,19 +5,23 @@ Created on Thu Nov  2 14:33:52 2023
 
 import numpy as np
 
-lam_1 = 16.47826
-scan_mean_1 = 0.432
+#type 1
+lam_1 = 16.47826 # arrivals per day ~Poisson (inter-arrival ~Exp(9/lam))
+scan_mean_1 = 0.432 # scan duration ~N
 scan_sd_1 = 0.0974
 
-lam_2 = 10.3913
-scan_shape = 12.583
+#type 2
+ia_mean = 0.8666387 # interarrival times ~N
+ia_sd = 0.31
+scan_shape = 12.583 # scan duration ~Gamma
 scan_scale = 1/18.800
 
-slotlength_1 = 9/17
-slotlength_2 = 9/11
+slotlength_1 = 9/18
+slotlength_2 = 9/12
 
-n_days = 1000
+n_days = 10000
 
+#generates list of type 1 patients and assigns randomly drawn scan duration as attribute of patient
 def gen_one(lam, mean, sd):
     day = 0 
     time = 8
@@ -35,17 +39,18 @@ def gen_one(lam, mean, sd):
     patients = patients[:-1]
     return patients   
 
-def gen_two(lam, mean, sd):
+#generates list of type 2 patients and assigns randomly drawn scan duration as attribute of patient
+def gen_two(ia_mean, ia_sd, scan_scape, scan_scale):
     day = 0 
     time = 8
     patients = []
     
     while day < n_days:
-        arr_time = time + 9*np.random.exponential(1/lam)
+        arr_time = time + np.random.normal(ia_mean, ia_sd)
         if arr_time > 17:
             day += 1 
             arr_time -= 9    
-        scan_dur = np.random.gamma(mean,sd)
+        scan_dur = np.random.gamma(scan_shape,scan_scale)
         time = arr_time
         patients.append([day,time,scan_dur,2])
     patients = np.array(patients)
@@ -58,11 +63,11 @@ def merge(pat_1, pat_2): #merge and sort by incoming call time
     return stacked_patients[sorted_indices]
     
 def schedule(patients, slotlengths):
-    schedule_1 = []
-    schedule_2 = []
-    sch_days = [1,1]
-    schedule_1.append([1,8,0])
-    schedule_2.append([1,8,1])
+    schedule_1 = [] # machine 1
+    schedule_2 = [] # machine 2
+    sch_days = [1,1] # for respective machine
+    schedule_1.append([1,8,0]) # assign first patient
+    schedule_2.append([1,8,1]) # assign second patient
     sch_time_1 = 8 + slotlengths[int(patients[0][3]-1)]
     sch_time_2 = 8 + slotlengths[int(patients[1][3]-1)]
     
@@ -80,7 +85,14 @@ def schedule(patients, slotlengths):
         if sch_time_1 + slotlengths[int(patients[i][3] -1)] > 17 and sch_time_2 + slotlengths[int(patients[i][3] -1)] > 17:
             sch_days[1] += 1 
             sch_time_2 = 8
-    
+        '''
+        # close every 15th day
+        if sch_days[0] % 15 == 0:
+            sch_days[0] += 1
+        if sch_days[1] % 15 == 0:
+            sch_days[1] += 1
+        '''
+        # assign patient to earliest available slot (if it fits)
         if (schedule_1[-1][0], schedule_1[-1][1]) <= (schedule_2[-1][0], schedule_2[-1][1]) and sch_time_1 + slotlengths[int(patients[i][3] -1)] <= 17:
             schedule_1.append([sch_days[0], round(sch_time_1,2), i])
             sch_time_1 += slotlengths[int(patients[i][3] -1)]
@@ -118,7 +130,7 @@ def performance_eval(schedule, patients):
     return lateness, days_wait, overtime, idle_time
 
 pat_1 = gen_one(lam_1, scan_mean_1, scan_sd_1)
-pat_2 = gen_two(lam_2, scan_shape, scan_scale)
+pat_2 = gen_two(ia_mean, ia_sd, scan_shape, scan_scale)
 patients = merge(pat_1, pat_2)
 schedules = schedule(patients, [slotlength_1, slotlength_2])
 
@@ -135,6 +147,7 @@ print("Average lateness:", round(np.average(lateness)*60,2), "minutes")
 print("lateness 25th quantile:", round(np.quantile(lateness, 0.25)*60,2), "minutes")
 print("lateness 50th quantile:", round(np.quantile(lateness, 0.5)*60,2), "minutes")
 print("lateness 75th quantile:", round(np.quantile(lateness, 0.75)*60,2), "minutes")
+print("lateness 90th quantile:", round(np.quantile(lateness, 0.9)*60,2), "minutes")
 print("Maximum lateness:", round(np.max(lateness)*60,2), "minutes")
 print("Average days wait:", round(np.average(days_wait),2), "days")
 print("Maximum days wait:", round(np.max(days_wait),2), "days")
