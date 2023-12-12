@@ -7,6 +7,8 @@ library(logspline)
 library(carData)
 library(car)
 
+set.seed(515)													# Set the seed
+
 ## importing data 
 df <- read_csv("C:/Maastircht University/Master/Year 1/Computational Research Skills/ScanRecords.csv")
 
@@ -54,10 +56,11 @@ print(Time_Type1)
 ## Consequently, we have a exponential distribution in the difference between two arrival times
 
 
-# Calculate the mean
+# Calculate the sample mean
 T1_mean <- mean(Time_Type1$Time_diff)
+print(T1_mean)
 
-#Calculate lambda
+#Calculate sample lambda
 T1_Lambda <- 1/T1_mean
 print(T1_Lambda)
 
@@ -77,7 +80,35 @@ h1 <- hist(Time_Type1$Time_diff,
 
 ## The histogram looks exponential - what we expected 
 
+##------------------------------------------------------------------------------------------------------
+
+B <- 499         # Number of bootstrap replications
+alpha <- 0.05    # Nominal level of the test
+
+# load data and store as X
+X <- Time_Type1$Time_diff
+
+n <- length(X)                                          # Sample size
+
+# We use the bootstrap to find the critical value
+Lambda <- rep(NA, times = B)                            # Initialise vector for bootstrap statistics
+for (b in 1:B) {
+  J <- sample.int(n, size = n, replace = TRUE)        # Draw the indices J
+  X.star <- X[J]                                      # Draw the bootstrap sample
+  X.bar.star <- mean(X.star)                        # Bootstrap sample mean
+  Lambda[b]  <- 1/X.bar.star                        #Bootstrap lambda
+}
+
+# Calculate the bootstrap confidence interval
+conf_interval <- quantile(Lambda, probs = c(0.025,0.975))                 # Calculate the bootstrap critical value
+
+# Display the results
+cat("True Rate Parameter:", T1_Lambda, "\n")
+cat("Bootstrap Confidence Interval:", conf_interval, "\n")
+
+
 # ------------------------------------------------------------------------------------------------------------------------------------------------------
+
 ## We perform the same formatting steps to obtain the time difference for Type 2
 
 #Format date variable
@@ -148,7 +179,10 @@ jarque.test(Time_Type2$Time_diff)
 ##----------------------------------------------------------------------------------------------------------------------
 
 
-print(descdist(Time_Type2$Time_diff, discrete = FALSE,boot = 500))
+print(descdist(Time_Type2$Time_diff, discrete = FALSE,boot = 499))
+
+## We observe that our sample + 499 bootstrapped samples are 
+## either normal or gamma in terms of skewness and kurtosis
 
 ##Graphs to compare Normal and Gamma
 par(mfrow = c(2, 2), mar = c(4, 4, 2, 1)) 
@@ -163,7 +197,7 @@ plotdist(Time_Type2$Time_diff, histo = TRUE, demp = TRUE)
 
 ##------------------------------------------------------------------------------------------------------------------
 
-## some code to test the fit of distribution and find parameters 
+## Test the fit of distribution and find parameters 
 fit.gamma_T <- fitdist(Time_Type2$Time_diff, "gamma")
 fit.norm_T <- fitdist(Time_Type2$Time_diff, "norm")
 
@@ -172,35 +206,29 @@ print(summary(fit.norm_T))
 
 ##---------------------------------------------------------------------------------------------------------------
 
-B <- 1000       # Number of bootstrap replications
+B <- 499       # Number of bootstrap replications
 X <- Time_Type2$Time_diff
 
 n <- length(X)                                  # Sample size
 X.bar <- mean(X)                                # Sample mean of X
 St.Dev <- sd(X)                                 # Standard deviation of X
-Q.n <- sqrt(n)*X.bar/St.Dev                     # Test statistic
 
 
-#beta = X.bar/k
-# We use the bootstrap to find the critical value
-Q.star <- rep(NA, times = B)  # Initialise vector for bootstrap statistics
+# Initialize empty vectors 
+
 stat_norm <- rep(NA, times = B)
 stat_gamma <- rep(NA, times = B)
 X.bar.star.sd <- rep(NA, times = B)
 X.bar.star.mean <- rep(NA, times = B)
-reject.t <- rep(0, times = B)
-cv.t <-qt(0.975,n-1)   
+   
 
 for (b in 1:B) {
   J <- sample.int(n, size = n, replace = TRUE)        # Draw the indices J
   X.star <- X[J]  # Draw the bootstrap sample
- # X.star <- rgamma(n, shape = k, scale = beta)
- # X.star <- rnorm(n, mean = X.bar, sd = St.Dev)
   X.bar.star <- mean(X.star)  #Bootstrap sample mean
   St.Dev.star <- sd(X.star)   # Bootstrap standard deviation
   X.bar.star.mean[b] <- X.bar.star
   X.bar.star.sd[b] <- St.Dev.star
-  Q.star[b] <- sqrt(n)*(X.bar.star-X.bar)/St.Dev.star # Bootstrap statistic
   stat_gamma[b] <- ks.test(X.star, 
                            "pgamma", 
                            shape = 6.365265, 
@@ -215,23 +243,42 @@ for (b in 1:B) {
 
 print(mean(stat_norm))
 print(mean(stat_gamma))
-print(mean(X.star))
-print(mean(X.bar.star.mean))
+
+# We observe a very low KS statistic for both distributions - high p value
+# Meaning there is no significant evidence 
+# to reject the null that our sample fits these distributions
+# Given that normal has the lower test statistic we will take it 
 
 ##----------------------------------------------------------------------------------------------------
 
-cv <- quantile(X.bar.star.sd, probs = c(0.025,0.975) )  # Calculate the confidence interval
+cv_mean <- quantile(X.bar.star.mean, probs = c(0.025,0.975) )  # Calculate the confidence interval
+cv_sd <- quantile(X.bar.star.sd, probs = c(0.025,0.975) )  # Calculate the confidence interval
+
+print(mean(X.bar.star.mean))
+print(cv_mean)
 
 print(mean(X.bar.star.sd))
-print(cv)
+print(cv_sd)
 hist(X.bar.star.mean)
-print(mean(X.bar.star.mean))
 hist(X.bar.star.mean)
 
-upperbound <- X.bar-(-1.996781*St.Dev/sqrt(n)) ## critical values are calculated above at cv
-lowerbound <- X.bar-(1.753916*St.Dev/sqrt(n))
-print(upperbound)
-print(lowerbound)
 
 ##------------------------------------------------------------------------------------------------------
+
+nr.sim <- 5000                           # Number of simulations
+n <- length(Time_Type2$Time_diff)
+ks_statistics <- numeric(nr.sim)         # Vector to store KS statistics
+
+for (i in 1:nr.sim) {                    # Start the simulations
+  ## Step 1: Simulate ##
+  X <- rnorm(n)  # Draw a single simulated sample
+  
+  ## Step 2: Apply ##
+  ks_statistics[i] <- ks.test(X, "pnorm")$statistic
+}
+
+## Step 3: Evaluate and Summarize
+print(mean(ks_statistics))
+
+
 
