@@ -9,12 +9,7 @@ library(car)
 
 set.seed(515)													# Set the seed
 
-## importing data 
-df <- read_csv("C:/Maastircht University/Master/Year 1/Computational Research Skills/ScanRecords.csv")
 
-## splitting type 1 and type 2 patiens 
-df_type1 <- df[df$PatientType == 'Type 1',]
-df_type2 <- df[df$PatientType == 'Type 2',]
 
 # ----------------------------------------------------------------------------------------------------------------------------------------------------
 
