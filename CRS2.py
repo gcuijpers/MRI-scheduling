@@ -57,7 +57,7 @@ def gen_two(ia_mean, ia_sd, scan_scape, scan_scale):
     patients = patients[:-1]
     return patients   
 
-def merge(pat_1, pat_2): #merge and sort by incoming call time
+def merge(pat_1, pat_2): #merge and sort by incoming call time (stack and sort)
     stacked_patients = np.vstack((pat_1, pat_2))
     sorted_indices = np.lexsort((stacked_patients[:, 1], stacked_patients[:, 0]))
     return stacked_patients[sorted_indices]
@@ -65,16 +65,15 @@ def merge(pat_1, pat_2): #merge and sort by incoming call time
 def schedule(patients, slotlengths):
     schedule_1 = [] # machine 1
     schedule_2 = [] # machine 2
-    sch_days = [1,1] # for respective machine
-    schedule_1.append([1,8,0]) # assign first patient
-    schedule_2.append([1,8,1]) # assign second patient
+    sch_days = [1,1] # for respective machine (day of current earliest feasible slot)
+    schedule_1.append([1,8,0]) # assign first patient (initialization)
+    schedule_2.append([1,8,1]) # assign second patient (initialization)
     sch_time_1 = 8 + slotlengths[int(patients[0][3]-1)]
     sch_time_2 = 8 + slotlengths[int(patients[1][3]-1)]
     
-
     for i in range(2,len(patients)): #day, time, patient's index
     
-        #only shift if neither type can be scheduled anymore or patients call on same day
+        #only shift if neither type can be scheduled anymore or no more patients to schedule that day
         if sch_time_1 + min(slotlengths) > 17 or patients[i][0] == sch_days[0]:
             sch_days[0] += 1
             sch_time_1 = 8
@@ -92,7 +91,7 @@ def schedule(patients, slotlengths):
         if sch_days[1] % 15 == 0:
             sch_days[1] += 1
         '''
-        # assign patient to earliest available slot (if it fits)
+        # assign patient to earliest available slot (if it fits that day)
         if (schedule_1[-1][0], schedule_1[-1][1]) <= (schedule_2[-1][0], schedule_2[-1][1]) and sch_time_1 + slotlengths[int(patients[i][3] -1)] <= 17:
             schedule_1.append([sch_days[0], round(sch_time_1,2), i])
             sch_time_1 += slotlengths[int(patients[i][3] -1)]
@@ -137,9 +136,9 @@ schedules = schedule(patients, [slotlength_1, slotlength_2])
 lateness_m1, days_wait_m1, overtime_m1, idle_time_m1 = performance_eval(schedules[0], patients)
 lateness_m2, days_wait_m2, overtime_m2, idle_time_m2 = performance_eval(schedules[1], patients)
 
-lateness = lateness_m1 + lateness_m2
-days_wait = days_wait_m1 + days_wait_m2
-overtime = [max(m1, m2) for m1, m2 in zip(overtime_m1, overtime_m2)] # entire team stays if overtime on 1 machine?
+lateness = lateness_m1 + lateness_m2 # append lists. works for percentiles. 
+days_wait = days_wait_m1 + days_wait_m2 
+overtime = [max(m1, m2) for m1, m2 in zip(overtime_m1, overtime_m2)] # entire team stays if overtime on 1 machine (assumed)
 idle_time = [m1 + m2 for m1, m2 in zip(idle_time_m1, idle_time_m2)]
 
 #print(lateness,"\n")
