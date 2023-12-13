@@ -34,9 +34,9 @@ def gen_one(lam, mean, sd):
             arr_time -= 9    
         scan_dur = np.random.normal(mean,sd)
         time = arr_time
-        patients.append([day,time,scan_dur])
+        patients.append([day,time,scan_dur]) # save day + time of call. scan_dur as attribute
     patients = np.array(patients)
-    patients = patients[:-1]
+    patients = patients[:-1] # last patients calls at day = n_days + 1
     return patients   
 
 #generates list of type 2 patients and assigns randomly drawn scan duration as attribute of patient
@@ -66,7 +66,7 @@ def schedule(patients, n_slot):
         if pat[0] == sch_day or slot == n_slot: # go to next day if no more available slots
             sch_day += 1 
             slot = 0
-        patient_slot = [sch_day,8+slot*(9/n_slot)]
+        patient_slot = [sch_day,8+slot*(9/n_slot)] # save day, time of start of slot
         slot += 1 
         schedule.append(patient_slot)
     schedule = np.array(schedule)
@@ -87,8 +87,8 @@ def perf_eval(schedule, patients):
         if i == len(schedule) -1:
             break
         if(schedule[i+1][1] == 8): # new day
-            overtime.append(max(0, time - 17))
-            idletime.append(max(0, 9 - scan_sum))
+            overtime.append(max(0, time - 17)) # overtime if time after last finish > 17 
+            idletime.append(max(0, 9 - scan_sum + overtime[-1])) # idle time on day = length of day (incl. overtime) - sum of scan durations
             scan_sum = 0
             time = 8
         
