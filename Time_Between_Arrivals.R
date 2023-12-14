@@ -258,22 +258,6 @@ hist(X.bar.star.mean)
 hist(X.bar.star.mean)
 
 
-##------------------------------------------------------------------------------------------------------
-
-nr.sim <- 5000                           # Number of simulations
-n <- length(Time_Type2$Time_diff)
-ks_statistics <- numeric(nr.sim)         # Vector to store KS statistics
-
-for (i in 1:nr.sim) {                    # Start the simulations
-  ## Step 1: Simulate ##
-  X <- rnorm(n)  # Draw a single simulated sample
-  
-  ## Step 2: Apply ##
-  ks_statistics[i] <- ks.test(X, "pnorm")$statistic
-}
-
-## Step 3: Evaluate and Summarize
-print(mean(ks_statistics))
 
 
 
